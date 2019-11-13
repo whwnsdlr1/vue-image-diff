@@ -1,0 +1,64 @@
+{
+  "name": "vue-image-diff",
+  "version": "1.1.0",
+  "description": "vue component for multiple image diff",
+  "keywords": ["image-diff", "image-compare", "image-comparison", "multiple-image-diff", "multiple-image-compare", "multiple-image-comparison"],
+  "homepage": "https://github.com/whwnsdlr1/vue-image-diff",
+  "bugs": {
+    "url": "https://github.com/whwnsdlr1/vue-image-diff/issues",
+    "email": "whwnsdlr1@naver.com"
+  },
+  "license": "MIT",
+  "contributors": [
+    "JunIk Jo <whwnsdlr1@naver.com> (https://whwnsdlr1.github.io)"
+  ],
+  "main": "./dist/vue-image-diff.umd.min.js",
+  "files": ["dist", "src", "public"],
+  "scripts": {
+    "serve": "vue-cli-service serve",
+    "build": "vue-cli-service build --target lib --name vueImageDiff --filename vue-image-diff",
+    "lint": "vue-cli-service lint"
+  },
+  "dependencies": {
+    "core-js": "^2.6.5",
+    "cornerstone-core": "^2.3.0",
+    "element-resize-event": "^3.0.3",
+    "jpeg-js": "^0.3.6",
+    "pngjs": "^3.4.0",
+    "vue": "^2.6.10",
+    "vue-lodash": "^2.0.2",
+    "vue-toasted": "^1.1.27"
+  },
+  "devDependencies": {
+    "@vue/cli-plugin-babel": "^3.11.0",
+    "@vue/cli-plugin-eslint": "^3.11.0",
+    "@vue/cli-service": "^3.11.0",
+    "babel-eslint": "^10.0.1",
+    "eslint": "^5.16.0",
+    "eslint-plugin-vue": "^5.0.0",
+    "vue-template-compiler": "^2.6.10"
+  },
+  "eslintConfig": {
+    "root": true,
+    "env": {
+      "node": true
+    },
+    "extends": [
+      "plugin:vue/essential",
+      "eslint:recommended"
+    ],
+    "rules": {},
+    "parserOptions": {
+      "parser": "babel-eslint"
+    }
+  },
+  "postcss": {
+    "plugins": {
+      "autoprefixer": {}
+    }
+  },
+  "browserslist": [
+    "> 1%",
+    "last 2 versions"
+  ]
+}
