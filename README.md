@@ -1,26 +1,15 @@
 # image-diff
-![Alt Text](example.gif)
+vue component for multiple image comparison.
 
-client web application to compare multiple images.
-<br />
-you can pan, zoom and diff multiple images at the same time.
-<br />
-currently support 8bit jpg, png format
-<br />
-this project was built with the Vue framework and many other libraries.
-
-## Demo
-you can online demo in [https://whwnsdlr1.github.io/image-diff](https://whwnsdlr1.github.io/image-diff/).
-<br />
-or
-<br />
-install project as below
+Web-App: [https://github.com/whwnsdlr1/image-diff](https://github.com/whwnsdlr1/image-diff)
+jsfiddle: 
+## Build
+build project as below
 ```
-git clone https://github.com/whwnsdlr1/image-diff
-yarn install
-yarn run serve
+git clone https://github.com/whwnsdlr1/vue-image-diff
+cd vue-image-diff
+yarn run build
 ```
-and access to http://localhost:port
 
 ## Usage
 1. load images by drag & drop or dialog that you can open by panel click.
@@ -77,7 +66,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - babel-eslint
 - eslint
 - eslint-plugin-vue
-- sitemap-webpack-plugin
 - vue-template-compiler
 
 ## TO-DO
