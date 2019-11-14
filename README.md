@@ -1,4 +1,4 @@
-# image-diff
+# vue-image-diff
 vue component for multiple image comparison.
 
 Web-App: [https://github.com/whwnsdlr1/image-diff](https://github.com/whwnsdlr1/image-diff)
