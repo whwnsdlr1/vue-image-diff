@@ -1,8 +1,15 @@
 {
   "name": "vue-image-diff",
-  "version": "1.1.0",
+  "version": "0.0.0-beta.1",
   "description": "vue component for multiple image diff",
-  "keywords": ["image-diff", "image-compare", "image-comparison", "multiple-image-diff", "multiple-image-compare", "multiple-image-comparison"],
+  "keywords": [
+    "image-diff",
+    "image-compare",
+    "image-comparison",
+    "multiple-image-diff",
+    "multiple-image-compare",
+    "multiple-image-comparison"
+  ],
   "homepage": "https://github.com/whwnsdlr1/vue-image-diff",
   "bugs": {
     "url": "https://github.com/whwnsdlr1/vue-image-diff/issues",
@@ -13,7 +20,11 @@
     "JunIk Jo <whwnsdlr1@naver.com> (https://whwnsdlr1.github.io)"
   ],
   "main": "./dist/vue-image-diff.umd.min.js",
-  "files": ["dist", "src", "public"],
+  "files": [
+    "dist",
+    "src",
+    "public"
+  ],
   "scripts": {
     "serve": "vue-cli-service serve",
     "build": "vue-cli-service build --target lib --name vueImageDiff --filename vue-image-diff",
@@ -26,8 +37,7 @@
     "jpeg-js": "^0.3.6",
     "pngjs": "^3.4.0",
     "vue": "^2.6.10",
-    "vue-lodash": "^2.0.2",
-    "vue-toasted": "^1.1.27"
+    "vue-lodash": "^2.0.2"
   },
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.11.0",

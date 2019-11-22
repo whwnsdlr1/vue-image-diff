@@ -1,44 +1,123 @@
-# image-diff
+# vue-image-diff
+![Alt Text](example.gif)
 vue component for multiple image comparison.
+currently supported only 8bit jpg and png format.
 
 Web-App: [https://github.com/whwnsdlr1/image-diff](https://github.com/whwnsdlr1/image-diff)
-jsfiddle: 
-## Build
-build project as below
-```
-git clone https://github.com/whwnsdlr1/vue-image-diff
-cd vue-image-diff
-yarn run build
-```
+<br />
+jsfiddle1: [https://jsfiddle.net/whwnsdlr1/xgz21e95/](https://jsfiddle.net/whwnsdlr1/xgz21e95/)
+<br />
+jsfiddle2: 44
+<br />
 
 ## Usage
-1. load images by drag & drop or dialog that you can open by panel click.
-2. (optional) if the images are different sizes, the other images will be resized to the first image size.
-you can set order of images using file name(index key and value, seperated by two underscore).
-ex) barbara__index__0.jpg, cameraman__index__1.jpg, salesman__index__3.png...
-3. diff !
-```
-mouse & touch drag - panning
-mouse wheel & pinch to zoom - zoom in / out
-mouse doubleclick - select reference image
+in Vue Project
+```html
+<template>
+...
+<vue-image-diff :data="data" :options="options" :options-tool-bar="optionsToolBar" />
+...
+</template>
+<script>
+import VueImageDiff from 'vue-image-diff'
+export default {
+  ...
+  components: {
+    'vue-image-diff': VueImageDiff
+  }
+  ...
+}
+</script>
 ```
 
-- x: coordinate x.
-- y: coordinate y.
-- scale: scale, scale is applied before coordinate.(panning)
-- diff: turn on / off diff mode.
-- ref: reference image to diff. you can change ref by frame click in diff mode.
-- tolerance: if difference value(Mean Square Error) is greater than or equal tolerance, pixel is set difference-tag. opposite, set same-tag less than tolerance. ![equation](http://latex.codecogs.com/png.latex?%5Csum_%7BP%7D%5E%7Bp%7D%28%5Csqrt%7B%28R_%7Bp1%7D-R_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28G_%7Bp1%7D-G_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28B_%7Bp1%7D-B_%7Bp2%7D%29%5E%7B2%7D%7D%29)
-- home: move to image load page.
-- rearrange: rearrange frames. drag and drop.
-- setting
+in html
+```html
+<body>
+<script src="vue.js"></script><!-- include vue.js first! -->
+<script src="VueImageDiff.js"></script>
+...
+<vue-image-diff :data=data :options=options :options-tool-bar=optionsToolBar />
+...
+</body>
 ```
-- define image size: image size to be resized. only can set before load images.
-- show overlay text: show / hidden file name and description.
-- frame row count: frames row count.
-- border width: border width. limit to [0, 40)
-- border color: border color.
+data is array of object.
+```js
+data = [
+  {
+    name: 'korea Mountains', // String: text to show overlay region
+    blob: blob, // Blob: ImageBlob to show
+    ext: 'jpg' // String: 'jpg' or 'png'
+    params: {author: 'fxgsell'}, // Object, (optional): default value is {}. text to show overlay region
+    id: id // String, (optional): default value is created by uuid4(). unique id 
+  }
+]
 ```
+
+options is object
+```js
+options = {
+  coord: {
+    x: 0, // Number, (optional): default value is 0. coordinate x
+    y: 0 // Number, (optional): default value is 0. coordinate y
+  },
+  zoom: 1, // Number, (optional): default value is calculate by windows. zoom, scale value. 1 is original scale
+  voi: {
+    windowCenter: 127, // Number, (optional): default value is 127. range (0, 255]. adjust brightness
+    windowWidth: 256 // Number, (optional): default value is 256. range (1, 256]. adjust contrast
+  },
+  predefinedImageSize: {
+    width: undefined, // Number or undefined, (optional): default value in undefined. width to be resized. if not set, other images are resized based on the first image size.
+    height: undefined // Number or undefined, (optional): default value in undefined. height to be resized. if not set, other images are resized based on the first image size.
+  },
+  diff: {
+    activate: false, // Bool, (optional): default value is false. flag to show diff ovelary
+    reference: {
+      id: undefined, // String or undefined, (optional): default value is undefined. base image to diff. if not set, it is selected as the first image.
+    },
+    tolerance: 1, // Number, (optional): default value is 1. range [1, 441]. if difference value(Mean Square Error) is greater than or equal tolerance, pixel is set difference-tag. opposite, set same-tag less than tolerance. ![equation](http://latex.codecogs.com/png.latex?%5Csum_%7BP%7D%5E%7Bp%7D%28%5Csqrt%7B%28R_%7Bp1%7D-R_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28G_%7Bp1%7D-G_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28B_%7Bp1%7D-B_%7Bp2%7D%29%5E%7B2%7D%7D%29)
+    opacity: 0.7, // Number, (optional): default value is 0.7. range (0, 1). opacity of diff overlay
+    colors: {
+      same: new Uint8ClampedArray([0, 0, 255]), // Array, (optional): default value is [0, 0, 255]. color rgb of same-tag pixel
+      diff: new Uint8ClampedArray([255, 0, 0]) // Array, (optional): default value is [0, 0, 255]. color rgb of diff-tag pixel
+    }
+  },
+  style: {
+    borderWidth: 1, // Number, (optional): default value is [1, infty). border width between frames.
+    borderColor: new Uint8ClampedArray([255, 0, 0]), // Array, (optional): default value is [255, 0, 0]. color rgb of border
+    showOverlayText: true, // Bool, (optional): default value is true. flag to show overlay text
+    frameRowCount: 3 // Number or undefined, (optional): default value is undefined. range [1, infty). frame row count. if not set, calcuate by data length.
+  }
+}
+```
+
+options is object
+```js
+optToolBar = {
+  show: true, // Bool, (optional)
+  pan: {
+    show: true, // Bool, (optional)
+    disabled: false // Bool, (optional)
+  },
+  zoom: {
+    show: true, // Bool, (optional)
+    disabled: false // Bool, (optional)
+  },
+  diff: {
+    show: true, // Bool, (optional)
+    ref: {
+      show: true // Bool, (optional)
+    },
+    tolerance: {
+      show: true // Bool, (optional)
+    }
+  }
+}
+```
+
+### Control
+- mouse & touch drag - panning
+- mouse wheel & pinch to zoom - zoom in / out
+- mouse doubleclick - select reference image for diff
 
 ## Browser support - (tested)
 - Google Chrome 77+
@@ -46,6 +125,13 @@ mouse doubleclick - select reference image
 - Mozilla FireFox 68+
 
 ## Project setup
+### Build
+build project as below
+```
+git clone https://github.com/whwnsdlr1/vue-image-diff
+cd vue-image-diff
+yarn run build
+```
 ### Customize configuration
 See [Configuration Reference](https://cli.vuejs.org/config/).
 
@@ -57,7 +143,6 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - pngjs: [https://github.com/arian/pngjs](https://github.com/arian/pngjs)
 - element-resize-event: [https://github.com/KyleAMathews/element-resize-event](https://github.com/KyleAMathews/element-resize-event)
 - vue-lodash: [https://github.com/Ewocker/vue-lodash](https://github.com/Ewocker/vue-lodash)
-- vue-toasted: [https://github.com/shakee93/vue-toasted](https://github.com/shakee93/vue-toasted)
 
 ### Dev-Dependencies
 - @vue/cli-plugin-babel
@@ -67,6 +152,3 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - eslint
 - eslint-plugin-vue
 - vue-template-compiler
-
-## TO-DO
-- support other image format(bmp, tiff)

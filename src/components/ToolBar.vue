@@ -3,23 +3,23 @@
   <div class="lamp">
     <div v-show="true"
       class="w-control-panel">
-      <button @click="listen__cp__onclick">Control Panel</button>
+      <button @click="listen__cp__onclick" :disabled="state.numFramesData == 0">Control Panel</button>
     </div>
     <div v-show="options.pan.show" class="pan-x">
       <span>x:</span>
-      <input type="number" :value="x" @change="listen__x__onchange" :disabled="options.pan.disabled" />
+      <input type="number" :value="x" @change="listen__x__onchange" :disabled="state.numFramesData == 0 || options.pan.disabled" />
     </div>
     <div v-show="options.pan.show" class="pan-y">
       <span>y:</span>
-      <input type="number" :value="y" @change="listen__y__onchange" :disabled="options.pan.disabled"/>
+      <input type="number" :value="y" @change="listen__y__onchange" :disabled="state.numFramesData == 0 || options.pan.disabled"/>
     </div>
     <div v-show="options.zoom.show" class="zoom">
       <span>zoom:</span>
-      <input type="number" min="0.01" :value="zoom" @change="listen__zoom__onchange" :disabled="options.zoom.disabled"/>
+      <input type="number" min="0.01" :value="zoom" @change="listen__zoom__onchange" :disabled="state.numFramesData == 0 || options.zoom.disabled"/>
     </div>
     <div v-show="options.diff.show">
       <span>diff:</span>
-      <input ref="check-diff" type="checkbox" @change="listen__diff_checked__onchange" :disabled="options.diff.disabled" :checked="state.diff.activate == true" />
+      <input ref="check-diff" type="checkbox" @change="listen__diff_checked__onchange" :disabled="state.numFramesData == 0 || options.diff.disabled" :checked="state.diff.activate == true" />
     </div>
     <div v-show="options.diff.ref.show">
       <span>ref:</span>
@@ -31,7 +31,7 @@
     </div>
     <div v-show="options.diff.tolerance.show">
       <span>tolerance:</span>
-      <input ref="input-tolerance" type="range" min="1" max="441.67" v-model="tolerance" :disabled="state.diff.activate == false" />
+      <input ref="input-tolerance" type="range" min="1" max="441.67" v-model="tolerance" :disabled="state.numFramesData == 0 || state.diff.activate == false" />
       <span class="tolerance-val">{{ tolerance }}</span>
     </div>
   </div>
@@ -52,7 +52,6 @@ import MISC from '@/js/miscellaneous.js'
 export default {
   props: [
     'state',
-    'frame-pan-coord',
     'options'
   ],
   data: function () {
@@ -90,8 +89,59 @@ export default {
       }
     },
     listen__cp__onclick: function () {
+      function makeBlock (rootDom, title) {
+        let dom = MISC.createElement('DIV', {marginBottom: '5px'}, {parent: rootDom})
+        MISC.createElement('H4', {margin: '0px', padding: '0px', fontSize: '16px'}, {parent: dom, text: title})
+        let contentDom = MISC.createElement('DIV', {paddingLeft: '15px'}, {parent: dom})
+        return contentDom
+      }
+
+      function makeRow (rootDom, name, dom_params) {
+        const styleRowOption = {display: 'flex', flexDirection: 'row', marginBottom: '2px', alignItems: 'center', justifyContent: 'space-between'}
+        let row = MISC.createElement('DIV', styleRowOption, {parent: rootDom})
+        MISC.createElement('SPAN', {fontSize: '14px'}, {parent: row, text: name})
+        for (let dom_param of dom_params) {
+          MISC.createElement(dom_param[0], {fontSize: '14px', ...dom_param[1]}, {parent: row, ...dom_param[2]})
+        }
+      }
+
       const Vue = this
+      const styleInput = {width: '40px', borderRadius: '5px', padding: '0px 0px 0px 3px'}
       let dom = MISC.createElement('DIV', {width: '300px'}, {})
+      let contentDom = makeBlock(dom, 'coord')
+      makeRow(contentDom, 'x', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.coord.x}}]])
+      makeRow(contentDom, 'y', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.coord.y}}]])
+      makeRow(dom, 'zoom', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.zoom}}]])
+
+      contentDom = makeBlock(dom, 'voi')
+      makeRow(contentDom, 'windowCenter', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.voi.windowCenter}}]])
+      makeRow(contentDom, 'windowWidth', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.voi.windowWidth}}]])
+
+      contentDom = makeBlock(dom, 'predefinedImageSize')
+      if (Vue.state.numFramesData == 0) {
+        makeRow(contentDom, 'width', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.predefinedImageSize.width}}]])
+        makeRow(contentDom, 'height', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.predefinedImageSize.height}}]])
+      } else {
+        const predefinedImageSizeWidth = Vue.state.predefinedImageSize.width != undefined ? `${Vue.state.predefinedImageSize.width}` : 'undefined'
+        const predefinedImageSizeHeight = Vue.state.predefinedImageSize.height != undefined ? `${Vue.state.predefinedImageSize.height}` : 'undefined'
+        makeRow(contentDom, 'width', [['SPAN', {}, {text: predefinedImageSizeWidth}]])
+        makeRow(contentDom, 'height', [['SPAN', {}, {text: predefinedImageSizeHeight}]])
+      }
+
+      contentDom = makeBlock(dom, 'diff')
+      makeRow(contentDom, 'activate', [['INPUT', {}, {attrs: {type: 'checkbox', checked: Vue.state.diff.checked}}]])
+      makeRow(contentDom, 'tolerance', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, max: 441, value: Vue.state.diff.tolerance}}]])
+      makeRow(contentDom, 'opacity', [['INPUT', styleInput, {attrs: {type: 'number', min: 0, max: 1, value: Vue.state.diff.opacity}}]])
+      let contentDom1 = makeBlock(contentDom, 'colors')
+      makeRow(contentDom1, 'same', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.same)}}]])
+      makeRow(contentDom1, 'diff', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.diff)}}]])
+
+      contentDom = makeBlock(dom, 'style')
+      makeRow(contentDom, 'borderWidth', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.style.borderWidth}}]])
+      makeRow(contentDom, 'borderColor', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.style.borderColor)}}]])
+      makeRow(contentDom, 'showOverlayText', [['INPUT', {}, {attrs: {type: 'checkbox', checked: Vue.state.style.showOverlayText}}]])
+      makeRow(contentDom, 'frameRowCount', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.style.frameRowCount}}]])
+      
       Vue.$mModal.show('dialog', {
         dom: dom,
         buttons: [
@@ -135,34 +185,6 @@ export default {
           MISC.createElement('SPAN', {...styleKey}, {parent: div, text: `${key}:`})
         MISC.createElement('SPAN', {...styleValue, color: valueColor}, {parent: div, text: `${value}`})
       }
-      /*
-      voi: {
-        windowCenter: 127,
-        windowWidth: 256
-      },
-      predefinedImageSize: {
-        width: undefined,
-        height: undefined
-      },
-      diff: {
-        activate: false,
-        reference: {
-          id: undefined,
-        },
-        tolerance: 1,
-        opacity: 0.7,
-        colors: {
-          same: new Uint8ClampedArray([0, 0, 255]),
-          diff: new Uint8ClampedArray([255, 0, 0])
-        }
-      },
-      style: {
-        borderWidth: 1,
-        borderColor: new Uint8ClampedArray([255, 0, 0]),
-        showOverlayText: true,
-        frameRowCount: undefined
-      }
-      */
       const Vue = this
       const state = Vue.state
       let dom = MISC.createElement('DIV', {}, {})
@@ -422,16 +444,6 @@ div.lamp input[type=range]::-moz-range-thumb {
 div.lamp input[type=range][disabled]::-moz-range-thumb {
   background: rgb(80, 80, 80);
   cursor: default;
-}
-
-div.lamp input[type=number]::-webkit-outer-spin-button,
-div.lamp input[type=number]::-webkit-inner-spin-button {
-  -webkit-appearance: none;
-  margin: 0;
-}
-
-div.lamp input[type=number] {
-  -moz-appearance:textfield;
 }
 
 div.icons {

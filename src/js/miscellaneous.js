@@ -227,6 +227,18 @@ function convertHexToRgb (hex) {
   } : null
 }
 
+function convertRgbToHex (r, g, b) {
+  function toHex(v) {
+    let hex = Number(v).toString(16)
+    if (hex.length < 2) {
+      hex = `0${hex}`
+    }
+    return hex
+  }
+  
+	return `#${toHex(r)}${toHex(g)}${toHex(b)}`.toUpperCase();
+}
+
 export default {
   getDateString,
   getUuid4,
@@ -239,5 +251,6 @@ export default {
   convertRGB2RGBA,
   convertRGB2RGBA1,
   convertRGBA2RGB,
-  convertHexToRgb
+  convertHexToRgb,
+  convertRgbToHex
 }

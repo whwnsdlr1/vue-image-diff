@@ -2,6 +2,7 @@
 <div class="body" oncontextmenu="return false">
   <tool-bar
     v-if="optToolBar.show"
+    ref="tool-bar"
     :options="optToolBar"
     :state="state"
     @state-tochange="listen__state__tochange"
@@ -87,6 +88,7 @@ export default {
       }
     }
     let state = {
+      numFramesData: 0,
       coord: {
         x: 0,
         y: 0
@@ -116,7 +118,7 @@ export default {
         borderWidth: 1,
         borderColor: new Uint8ClampedArray([255, 0, 0]),
         showOverlayText: true,
-        frameRowCount: undefined
+        frameRowCount: 3
       }
     }
 
@@ -140,9 +142,6 @@ export default {
         tolerance: {
           show: true
         }
-      },
-      icons: {
-        customs: []
       }
     }
     assignOpt(optToolBar, this.optionsToolBar)
@@ -170,14 +169,14 @@ export default {
       Vue.layer.active = true
       Vue.doubleRaf(async () => {
         try {
-          let frameData0 = []
-          let frameData = []
+          let framesData0 = []
+          let framesData = []
           if (data.length > 0) {
             for (const datum of data) {
               Vue.layer.message = `parse ${datum.name}`
               const res = await PARSE.parseImage(datum.blob, datum.ext)
               
-              frameData0.push({
+              framesData0.push({
                 id: datum.id != undefined ? datum.id : MISC.getUuid4(),
                 image: res,
                 name: datum.name,
@@ -185,18 +184,18 @@ export default {
                 index: datum.index != undefined ? datum.index : 0
               })
             }
-            frameData0.sort((v1, v2) => v1.index - v2.index)
+            framesData0.sort((v1, v2) => v1.index - v2.index)
             let defWidth
             let defHeight
             if (Vue.state.predefinedImageSize.width != undefined && Vue.state.predefinedImageSize.height != undefined) {
               defWidth = Vue.state.predefinedImageSize.width
               defHeight = Vue.state.predefinedImageSize.height
             } else {
-              defWidth = frameData0[0].image.width
-              defHeight = frameData0[0].image.height
+              defWidth = framesData0[0].image.width
+              defHeight = framesData0[0].image.height
             }
-            for (let idx in frameData0) {
-              const datum = frameData0[idx]
+            for (let idx in framesData0) {
+              const datum = framesData0[idx]
               const image = datum.image
               let cornerstoneImage
               let resized
@@ -209,7 +208,7 @@ export default {
                 resized = false
               }
               
-              frameData.push({
+              framesData.push({
                 id: datum.id,
                 cornerstoneImage,
                 diff: {
@@ -239,7 +238,8 @@ export default {
             Vue.state.zoom = (scaleY < scaleX)? scaleY : scaleX
           }
 
-          Vue.framesData = frameData
+          Vue.framesData = framesData
+          Vue.state.numFramesData = Vue.framesData
           Vue.layer.active = false
         } catch (err) {
           console.log(err)
@@ -247,11 +247,10 @@ export default {
         }
       })
     },
-    listen__frame__onmousemove: function (param) {
-      this.state.coord = param
-    },
     listen__view__on_x_down: function (e, type) {
       const Vue = this
+      if (Vue.state.numFramesData == 0)
+        return
       function mouseLeftUpHandler (e) {
         if (e.which == 1) {
           Vue.$el.removeEventListener('mousemove', mouseLeftMoveHandler)
@@ -373,6 +372,8 @@ export default {
     },
     listen__view__onwheel: function (e) {      
       const Vue = this
+      if (Vue.state.numFramesData == 0)
+        return
       if (Vue.state.zoom == undefined) return
 
       const as = e.wheelDelta < 0 || e.detail > 0 ? -0.10 : 0.10
@@ -572,7 +573,14 @@ export default {
       return JSON.parse(JSON.stringify(this.state))
     },
     setState: function () {
+    },
+    openControlPanel: function () {
+      const Vue = this
+      const toolBar = Vue.$refs['tool-bar']
+      if (toolBar == undefined)
+        return
       
+      toolBar.listen__cp__onclick()
     }
   },
   computed: {
@@ -589,7 +597,43 @@ export default {
   },
   updated () {
   },
-  mounted () {
+  async mounted () {
+    function fetchImages (data) {
+      return new Promise(function(resolve) {
+        for (let i = 0; i < data.length; i++) {
+          (function (datum, i) {
+            fetch(datum.url)
+              .then(response => response.blob())
+              .then(res => {
+                datum.blob = res
+                if (i == data.length - 1) {
+                  resolve(data)
+                }
+              })
+          }) (data[i], i)
+        }
+      })
+    }
+    fetchImages([
+      {
+        name: 'korea Mountains',
+        params: {author: 'fxgsell', license: 'CC BY 2.0'},
+        url: 'https://live.staticflickr.com/5081/5223054798_c3fd926b63_c_d.jpg',
+        ext: 'jpg'
+      },
+      {
+        name: 'Mt. jiri Korea',
+        params: {author: 'Byeong Min Park', license: 'flicker'},
+        url: 'https://live.staticflickr.com/5577/15234883386_ffeeb3a263_c_d.jpg',
+        ext: 'jpg'
+      },
+      {
+        name: '_SSJ4363',
+        params: {author: 'Seungjin Song', license: 'flicker'},
+        url: 'https://live.staticflickr.com/1683/24824937304_2d71742e34_c_d.jpg',
+        ext: 'jpg'
+      }
+    ]).then(data => this.listen__data__onchange(data))
   }
 }
 </script>
@@ -693,5 +737,15 @@ div {
 }
 .fade-enter, .fade-leave-to /* .fade-leave-active below version 2.1.8 */ {
   opacity: 0;
+}
+
+input[type=number]::-webkit-outer-spin-button,
+input[type=number]::-webkit-inner-spin-button {
+  -webkit-appearance: none;
+  margin: 0;
+}
+
+input[type=number] {
+  -moz-appearance:textfield;
 }
 </style>
