@@ -1,5 +1,6 @@
 # vue-image-diff
 ![Alt Text](example.gif)
+<br />
 vue component for multiple image comparison.
 currently supported only 8bit jpg and png format.
 
@@ -90,7 +91,7 @@ options = {
 }
 ```
 
-options is object
+optionsToolBar is object
 ```js
 optToolBar = {
   show: true, // Bool, (optional)
