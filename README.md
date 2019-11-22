@@ -151,4 +151,11 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - babel-eslint
 - eslint
 - eslint-plugin-vue
+<<<<<<< HEAD
 - vue-template-compiler
+=======
+- vue-template-compiler
+
+## TO-DO
+- support other image format(bmp, tiff)
+>>>>>>> 178c8e43b796b7c6fef2decb6685709138db91fb
