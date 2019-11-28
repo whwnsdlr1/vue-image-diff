@@ -96,51 +96,61 @@ export default {
         return contentDom
       }
 
-      function makeRow (rootDom, name, dom_params) {
+      function makeRow (rootDom, name, dom_param) {
         const styleRowOption = {display: 'flex', flexDirection: 'row', marginBottom: '2px', alignItems: 'center', justifyContent: 'space-between'}
         let row = MISC.createElement('DIV', styleRowOption, {parent: rootDom})
         MISC.createElement('SPAN', {fontSize: '14px'}, {parent: row, text: name})
-        for (let dom_param of dom_params) {
-          MISC.createElement(dom_param[0], {fontSize: '14px', ...dom_param[1]}, {parent: row, ...dom_param[2]})
-        }
+        return MISC.createElement(dom_param[0], {fontSize: '14px', ...dom_param[1]}, {parent: row, ...dom_param[2]});
       }
 
       const Vue = this
       const styleInput = {width: '40px', borderRadius: '5px', padding: '0px 0px 0px 3px'}
       let dom = MISC.createElement('DIV', {width: '300px'}, {})
       let contentDom = makeBlock(dom, 'coord')
-      makeRow(contentDom, 'x', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.coord.x}}]])
-      makeRow(contentDom, 'y', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.coord.y}}]])
-      makeRow(dom, 'zoom', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.zoom}}]])
+      makeRow(contentDom, 'x', ['INPUT', styleInput, {class: 'coord-x', attrs: {type: 'number', value: Number(Vue.state.coord.x)}}])
+      makeRow(contentDom, 'y', ['INPUT', styleInput, {class: 'coord-y', attrs: {type: 'number', value: Number(Vue.state.coord.y)}}])
+      makeRow(dom, 'zoom', ['INPUT', styleInput, {class: 'zoom', attrs: {type: 'number', value: Number(Vue.state.zoom)}}])
 
       contentDom = makeBlock(dom, 'voi')
-      makeRow(contentDom, 'windowCenter', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.voi.windowCenter}}]])
-      makeRow(contentDom, 'windowWidth', [['INPUT', styleInput, {attrs: {type: 'number', value: Vue.state.voi.windowWidth}}]])
+      makeRow(contentDom, 'windowCenter', ['INPUT', styleInput, {class: 'voi-window-center', attrs: {type: 'number', value: Number(Vue.state.voi.windowCenter)}}])
+      makeRow(contentDom, 'windowWidth', ['INPUT', styleInput, {class: 'voi-window-width', attrs: {type: 'number', value: Number(Vue.state.voi.windowWidth)}}])
 
       contentDom = makeBlock(dom, 'predefinedImageSize')
       if (Vue.state.numFramesData == 0) {
-        makeRow(contentDom, 'width', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.predefinedImageSize.width}}]])
-        makeRow(contentDom, 'height', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.predefinedImageSize.height}}]])
+        makeRow(contentDom, 'width', ['INPUT', styleInput, {class: 'predefined-image-size-width', attrs: {type: 'number', min: 1, value: Number(Vue.state.predefinedImageSize.width)}}])
+        makeRow(contentDom, 'height', ['INPUT', styleInput, {class: 'predefined-image-size-height', attrs: {type: 'number', min: 1, value: Number(Vue.state.predefinedImageSize.height)}}])
       } else {
         const predefinedImageSizeWidth = Vue.state.predefinedImageSize.width != undefined ? `${Vue.state.predefinedImageSize.width}` : 'undefined'
         const predefinedImageSizeHeight = Vue.state.predefinedImageSize.height != undefined ? `${Vue.state.predefinedImageSize.height}` : 'undefined'
-        makeRow(contentDom, 'width', [['SPAN', {}, {text: predefinedImageSizeWidth}]])
-        makeRow(contentDom, 'height', [['SPAN', {}, {text: predefinedImageSizeHeight}]])
+        makeRow(contentDom, 'width', ['SPAN', {}, {text: predefinedImageSizeWidth}])
+        makeRow(contentDom, 'height', ['SPAN', {}, {text: predefinedImageSizeHeight}])
       }
-
       contentDom = makeBlock(dom, 'diff')
-      makeRow(contentDom, 'activate', [['INPUT', {}, {attrs: {type: 'checkbox', checked: Vue.state.diff.checked}}]])
-      makeRow(contentDom, 'tolerance', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, max: 441, value: Vue.state.diff.tolerance}}]])
-      makeRow(contentDom, 'opacity', [['INPUT', styleInput, {attrs: {type: 'number', min: 0, max: 1, value: Vue.state.diff.opacity}}]])
+      let inputActivate = makeRow(contentDom, 'activate', ['INPUT', {}, {class: 'diff-activate', attrs: {type: 'checkbox', ...(Vue.state.diff.activate ? {checked: true} : {})}}])
+      inputActivate.onclick = function () {
+        if (this.checked == true) {
+          dom.querySelector('.diff-tolerance').disabled = false
+          dom.querySelector('.diff-opacity').disabled = false
+          dom.querySelector('.diff-colors-same').disabled = false
+          dom.querySelector('.diff-colors-diff').disabled = false
+        } else {
+          dom.querySelector('.diff-tolerance').disabled = true
+          dom.querySelector('.diff-opacity').disabled = true
+          dom.querySelector('.diff-colors-same').disabled = true
+          dom.querySelector('.diff-colors-diff').disabled = true
+        }
+      }
+      makeRow(contentDom, 'tolerance', ['INPUT', styleInput, {class: 'diff-tolerance', attrs: {type: 'number', min: 1, max: 441, value: Number(Vue.state.diff.tolerance), ...(inputActivate.checked == true ? {} : {disabled:true})}}])
+      makeRow(contentDom, 'opacity', ['INPUT', styleInput, {class: 'diff-opacity', attrs: {type: 'number', min: 0, max: 1, value: Number(Vue.state.diff.opacity), ...(inputActivate.checked == true ? {} : {disabled:true})}}])
       let contentDom1 = makeBlock(contentDom, 'colors')
-      makeRow(contentDom1, 'same', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.same)}}]])
-      makeRow(contentDom1, 'diff', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.diff)}}]])
+      makeRow(contentDom1, 'same', ['INPUT', {...styleInput, width: '65px'}, {class: 'diff-colors-same', attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.same), ...(inputActivate.checked == true ? {} : {disabled:true})}}])
+      makeRow(contentDom1, 'diff', ['INPUT', {...styleInput, width: '65px'}, {class: 'diff-colors-diff', attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.diff.colors.diff), ...(inputActivate.checked == true ? {} : {disabled:true})}}])
 
       contentDom = makeBlock(dom, 'style')
-      makeRow(contentDom, 'borderWidth', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.style.borderWidth}}]])
-      makeRow(contentDom, 'borderColor', [['INPUT', {...styleInput, width: '65px'}, {attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.style.borderColor)}}]])
-      makeRow(contentDom, 'showOverlayText', [['INPUT', {}, {attrs: {type: 'checkbox', checked: Vue.state.style.showOverlayText}}]])
-      makeRow(contentDom, 'frameRowCount', [['INPUT', styleInput, {attrs: {type: 'number', min: 1, value: Vue.state.style.frameRowCount}}]])
+      makeRow(contentDom, 'borderWidth', ['INPUT', styleInput, {class: 'style-border-width', attrs: {type: 'number', min: 1, value: Vue.state.style.borderWidth}}])
+      makeRow(contentDom, 'borderColor', ['INPUT', {...styleInput, width: '65px'}, {class: 'style-border-color', attrs: {type: 'text', value: MISC.convertRgbToHex(...Vue.state.style.borderColor)}}])
+      makeRow(contentDom, 'showOverlayText', ['INPUT', {}, {class: 'style-show-overlay-text', attrs: {type: 'checkbox', ...(Vue.state.style.showOverlayText ? {checked: true} : {})}}])
+      makeRow(contentDom, 'frameRowCount', ['INPUT', styleInput, {class: 'style-frame-row-count', attrs: {type: 'number', min: 1, value: Vue.state.style.frameRowCount}}])
       
       Vue.$mModal.show('dialog', {
         dom: dom,
@@ -153,10 +163,140 @@ export default {
             title: 'confirm',
             class: ['green'],
             onclick: () => {
-              Vue.$emit('state-tochange', {})
+              function putValue (obj0, keys, value) {
+                let obj = obj0;
+                for (const nk in keys) {
+                  const key = keys[nk];
+                  if (nk == keys.length - 1)
+                    obj[key] = value;
+                  else {
+                    if (obj[key] == undefined)
+                      obj[key] = {}
+                    obj = obj[key];
+                  }
+                }
+                
+              }
+              let newState = {}
+              if (dom.querySelector('.coord-x') != undefined) {
+                const value = dom.querySelector('.coord-x').value
+                if (value != Vue.state.coord.x)
+                  putValue(newState, ['coord', 'x'], Number(value))
+              }
+              if (dom.querySelector('.coord-y') != undefined) {
+                const value = dom.querySelector('.coord-y').value
+                if (value != Vue.state.coord.y)
+                  putValue(newState, ['coord', 'y'], Number(value))
+              }
+              if (newState.coord != undefined) {
+                if (newState.coord.x == undefined)
+                  newState.coord.x = Vue.state.coord.x
+                if (newState.coord.y == undefined)
+                  newState.coord.y = Vue.state.coord.y
+              }
+
+              if (dom.querySelector('.zoom') != undefined) {
+                const value = dom.querySelector('.zoom').value
+                if (value != Vue.state.zoom)
+                  putValue(newState, ['zoom'], Number(value))
+              }
+
+              if (dom.querySelector('.voi-window-center') != undefined) {
+                const value = dom.querySelector('.voi-window-center').value
+                if (value != Vue.state.voi.windowCenter)
+                  putValue(newState, ['voi', 'windowCenter'], Math.min(255, Math.max(0, Number(value))))
+              }
+              if (dom.querySelector('.voi-window-width') != undefined) {
+                const value = dom.querySelector('.voi-window-width').value
+                if (value != Vue.state.voi.windowWidth)
+                  putValue(newState, ['voi', 'windowWidth'], Math.min(256, Math.max(1, Number(value))))
+              }
+              if (newState.voi != undefined) {
+                if (newState.voi.windowCenter == undefined)
+                  newState.voi.windowCenter = Vue.state.voi.windowCenter
+                if (newState.voi.windowWidth == undefined)
+                  newState.voi.windowWidth = Vue.state.voi.windowWidth
+              }
+
+              if (dom.querySelector('.predefined-image-size-width') != undefined && dom.querySelector('.predefined-image-size-height') != undefined) {
+                const width = Number(dom.querySelector('.predefined-image-size-width').value)
+                const height = Number(dom.querySelector('.predefined-image-size-height').value)
+                if ((width != newState.predefinedImageSize.width || height != newState.predefinedImageSize.height) && width > 0 && height > 0) {
+                  putValue(newState, ['predefinedImageSize', 'width'], width)
+                  putValue(newState, ['predefinedImageSize', 'height'], height)
+                }
+              }
+
+              if (dom.querySelector('.diff-activate') != undefined) {
+                const value = dom.querySelector('.diff-activate').checked
+                if (value != Vue.state.diff.activate)
+                  putValue(newState, ['diff', 'activate'], value)
+              }
+              if (dom.querySelector('.diff-tolerance') != undefined) {
+                const value = Number(dom.querySelector('.diff-tolerance').value)
+                if (value != Vue.state.diff.tolerance && isNaN(value) == false)
+                  putValue(newState, ['diff', 'tolerance'], Math.min(441, Math.max(1, value)))
+              }
+              if (dom.querySelector('.diff-opacity') != undefined) {
+                const value = Number(dom.querySelector('.diff-opacity').value)
+                if (value != Vue.state.diff.opacity && isNaN(value) == false)
+                  putValue(newState, ['diff', 'opacity'], Math.min(1, Math.max(0, value)))
+              }
+              if (dom.querySelector('.diff-colors-same') != undefined) {
+                const value = MISC.convertHexToRgb(dom.querySelector('.diff-colors-same').value)
+                if (value != null) {
+                  const colors = new Uint8ClampedArray([value.r, value.g, value.b])
+                  let isChanged = false
+                  Vue.state.diff.colors.same.forEach((v, i) => isChanged = isChanged || v != colors[i])
+                  if (isChanged == true)
+                    putValue(newState, ['diff', 'colors', 'same'], colors)
+                }
+              }
+              
+              if (dom.querySelector('.diff-colors-diff') != undefined) {
+                const value = MISC.convertHexToRgb(dom.querySelector('.diff-colors-diff').value)
+                if (value != null) {
+                  const colors = new Uint8ClampedArray([value.r, value.g, value.b])
+                  let isChanged = false
+                  Vue.state.diff.colors.diff.forEach((v, i) => isChanged = isChanged || v != colors[i])
+                  if (isChanged == true)
+                    putValue(newState, ['diff', 'colors', 'diff'], colors)
+                }
+              }
+              if (dom.querySelector('.style-border-width') != undefined) {
+                const value = Number(dom.querySelector('.style-border-width').value)
+                if (value != Vue.state.style.borderWidth && isNaN(value) == false)
+                  putValue(newState, ['style', 'borderWidth'], Math.min(20, Math.max(0, value)))
+              }
+              if (dom.querySelector('.style-border-color') != undefined) {
+                const value = MISC.convertHexToRgb(dom.querySelector('.style-border-color').value)
+                if (value != null) {
+                  const colors = new Uint8ClampedArray([value.r, value.g, value.b])
+                  let isChanged = false
+                  Vue.state.style.borderColor.forEach((v, i) => isChanged = isChanged || v != colors[i])
+                  if (isChanged == true)
+                    putValue(newState, ['style', 'borderColor'], colors)
+                }
+              }
+              if (dom.querySelector('.style-show-overlay-text') != undefined) {
+                const value = dom.querySelector('.style-show-overlay-text').checked
+                if (value != Vue.state.style.showOverlayText)
+                  putValue(newState, ['style', 'showOverlayText'], value)
+              }
+              if (dom.querySelector('.style-frame-row-count') != undefined) {
+                const value = dom.querySelector('.style-frame-row-count').value
+                if (value != Vue.state.style.frameRowCount && isNaN(value) == false)
+                  putValue(newState, ['style', 'frameRowCount'], Math.max(1, value))
+              }
+              Vue.$emit('state-tochange', newState)
             }
           }
-        ]
+        ],
+        onafterdomattached: function (dom) {
+          const row1 = dom.parentElement;
+          const content = row1.parentElement;
+          row1.style.height = content.offsetHeight - content.querySelector('.row0').offsetHeight - content.querySelector('.row2').offsetHeight + 'px'
+        }
       })
     },
     listen__reset_state__onclick: function () {
@@ -204,6 +344,8 @@ export default {
       putValue(dom, 0, null, '}', 'parentheses')
       putValue(dom, 0, 'diff', '{', 'parentheses')
       putValue(dom, 1, 'activate', state.diff.activate, 'boolean')
+      putValue(dom, 1, 'tolerance', state.diff.tolerance, 'number')
+      putValue(dom, 1, 'opacity', state.diff.opacity, 'number')
       putValue(dom, 1, 'reference', '{', 'parentheses')
       putValue(dom, 2, 'id', state.diff.reference.id, 'string')
       putValue(dom, 1, null, '}', 'parentheses')
@@ -243,6 +385,7 @@ export default {
       let data = {
         Pan: 'PC - left mouse drag / Mobile - touch drag',
         Zoom: 'PC - middle mouse, or mousewheel / Mobile - two-finger spread or squish',
+        'Change reference image': 'left mouse doubleclick',
         'Adjust Brightness': 'right mouse drag along a vertical axis',
         'Adjust Contrast': 'right mouse drag along a horizontal axis'
       }
@@ -255,7 +398,6 @@ export default {
       MISC.createElement('HR', {}, {parent: dom})
       data = [
         {head: 'version', type: 'span', text: process.env.PACKAGE_VERSION},
-        {head: 'github', type: 'a', text: process.env.homepage},
         {head: 'issues', type: 'a', text: process.env.issuesUrl}
       ]
       for (let el of data) {

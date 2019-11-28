@@ -1,16 +1,18 @@
 # vue-image-diff
-![Alt Text](example.gif)
+![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/example.gif)
 vue component for multiple image comparison.
+<br />
 currently supported only 8bit jpg and png format.
 
 Web-App: [https://github.com/whwnsdlr1/image-diff](https://github.com/whwnsdlr1/image-diff)
 <br />
 jsfiddle1: [https://jsfiddle.net/whwnsdlr1/xgz21e95/](https://jsfiddle.net/whwnsdlr1/xgz21e95/)
 <br />
-jsfiddle2: 44
+jsfiddle2: [https://jsfiddle.net/whwnsdlr1/84bkq2hy/](https://jsfiddle.net/whwnsdlr1/84bkq2hy/)
 <br />
 
 ## Usage
+### how to include component
 in Vue Project
 ```html
 <template>
@@ -40,6 +42,8 @@ in html
 ...
 </body>
 ```
+
+### arguments structure
 data is array of object.
 ```js
 data = [
@@ -90,7 +94,7 @@ options = {
 }
 ```
 
-options is object
+optionsToolBar is object
 ```js
 optToolBar = {
   show: true, // Bool, (optional)
@@ -113,11 +117,14 @@ optToolBar = {
   }
 }
 ```
+### functions
+- open Control panel: openControlPanel()
+![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/control_panel.png)
 
 ### Control
 - mouse & touch drag - panning
 - mouse wheel & pinch to zoom - zoom in / out
-- mouse doubleclick - select reference image for diff
+- mouse doubleclick - change reference image for diff
 
 ## Browser support - (tested)
 - Google Chrome 77+
@@ -151,11 +158,4 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - babel-eslint
 - eslint
 - eslint-plugin-vue
-<<<<<<< HEAD
 - vue-template-compiler
-=======
-- vue-template-compiler
-
-## TO-DO
-- support other image format(bmp, tiff)
->>>>>>> 178c8e43b796b7c6fef2decb6685709138db91fb

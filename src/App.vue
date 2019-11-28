@@ -207,7 +207,6 @@ export default {
                 cornerstoneImage = await Vue.$cornerstone.createCornerstoneImageRgba(undefined, image.pixelData, defWidth, defHeight)
                 resized = false
               }
-              
               framesData.push({
                 id: datum.id,
                 cornerstoneImage,
@@ -408,6 +407,20 @@ export default {
           }
 
           if (Vue.state.diff.activate == true) {
+            if (data.diff.opacity != undefined) {
+              Vue.state.diff.opacity = data.diff.opacity
+            }
+            let isChangeDiffColors = false
+            if (data.diff.colors != undefined) {
+              if (data.diff.colors.same != undefined) {
+                Vue.state.diff.colors.same = data.diff.colors.same
+                isChangeDiffColors = true
+              }
+              if (data.diff.colors.diff != undefined) {
+                Vue.state.diff.colors.diff = data.diff.colors.diff
+                isChangeDiffColors = true
+              }
+            }
             Vue.layer.message = 'check pre-cacluated diff'
             await Vue.nextTick()
             let framesData = Vue.framesData
@@ -423,6 +436,9 @@ export default {
                   frameData.cornerstoneImage.width,
                   frameData.cornerstoneImage.height
                 )
+              }
+              if (data.diff.opacity != undefined) {
+                frameData.diff.opacity = Vue.state.diff.opacity
               }
             }
             if (Vue.diffs == undefined) {
@@ -474,7 +490,7 @@ export default {
               referenceFrameData.diff.pixelCount = undefined
               referenceFrameData.diff.psnr = undefined
             }
-            if (isChangeTolerance || isChangeReference) {
+            if (isChangeDiffColors || isChangeTolerance || isChangeReference) {
               const tolerance = Vue.state.diff.tolerance
               const frameId1 = Vue.framesData[Vue.framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)].id
               for (let i2 = 0; i2 < Vue.framesData.length; i2++) {
@@ -520,6 +536,16 @@ export default {
               Vue.framesData[nf].diff.updated = 0
             }
           }
+        }
+        if (data.style != undefined) {
+          if (data.style.borderWidth != undefined)
+            Vue.state.style.borderWidth = data.style.borderWidth
+          if (data.style.borderColor != undefined)
+            Vue.state.style.borderColor = data.style.borderColor
+          if (data.style.showOverlayText != undefined)
+            Vue.state.style.showOverlayText = data.style.showOverlayText
+          if (data.style.frameRowCount != undefined)
+            Vue.state.style.frameRowCount = data.style.frameRowCount
         }
         Vue.layer.active = false
       })
