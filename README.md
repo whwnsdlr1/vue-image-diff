@@ -1,6 +1,7 @@
 # vue-image-diff
 
 ![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/example.gif)
+<br />
 vue component for multiple image comparison.
 <br />
 currently supported only 8bit jpg and png format.
@@ -120,6 +121,7 @@ optToolBar = {
 ```
 ### functions
 - open Control panel: openControlPanel()
+<br />
 ![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/control_panel.png)
 
 ### Control
