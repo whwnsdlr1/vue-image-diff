@@ -1,4 +1,5 @@
 # vue-image-diff
+
 ![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/example.gif)
 vue component for multiple image comparison.
 <br />
