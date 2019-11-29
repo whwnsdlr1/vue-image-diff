@@ -120,9 +120,9 @@ optToolBar = {
 }
 ```
 ### functions
-- open Control panel: openControlPanel()
-<br />
 ![Alt Text](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/control_panel.png)
+- open Control panel: openControlPanel()
+
 
 ### Control
 - mouse & touch drag - panning
