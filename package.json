@@ -1,6 +1,6 @@
 {
   "name": "vue-image-diff",
-  "version": "1.0.0",
+  "version": "1.0.3",
   "description": "vue component for multiple image diff",
   "keywords": [
     "image-diff",

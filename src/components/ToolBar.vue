@@ -55,11 +55,12 @@ export default {
     'options'
   ],
   data: function () {
+    const Vue = this
     return {
-      x: undefined,
-      y: undefined,
-      zoom: undefined,
-      tolerance: undefined
+      x: Vue.state.coord.x,
+      y: Vue.state.coord.y,
+      zoom: Vue.state.zoom,
+      tolerance: Vue.state.diff.tolerance
     }
   },
   methods: {
@@ -197,18 +198,18 @@ export default {
 
               if (dom.querySelector('.zoom') != undefined) {
                 const value = dom.querySelector('.zoom').value
-                if (value != Vue.state.zoom)
+                if (value != Vue.state.zoom && isNaN(value) == false && `${value}`.length > 0)
                   putValue(newState, ['zoom'], Number(value))
               }
 
               if (dom.querySelector('.voi-window-center') != undefined) {
-                const value = dom.querySelector('.voi-window-center').value
-                if (value != Vue.state.voi.windowCenter)
+                const value = Number(dom.querySelector('.voi-window-center').value)
+                if (value != Vue.state.voi.windowCenter && isNaN(value) == false)
                   putValue(newState, ['voi', 'windowCenter'], Math.min(255, Math.max(0, Number(value))))
               }
               if (dom.querySelector('.voi-window-width') != undefined) {
-                const value = dom.querySelector('.voi-window-width').value
-                if (value != Vue.state.voi.windowWidth)
+                const value = Number(dom.querySelector('.voi-window-width').value)
+                if (value != Vue.state.voi.windowWidth && isNaN(value) == false)
                   putValue(newState, ['voi', 'windowWidth'], Math.min(256, Math.max(1, Number(value))))
               }
               if (newState.voi != undefined) {
@@ -221,7 +222,7 @@ export default {
               if (dom.querySelector('.predefined-image-size-width') != undefined && dom.querySelector('.predefined-image-size-height') != undefined) {
                 const width = Number(dom.querySelector('.predefined-image-size-width').value)
                 const height = Number(dom.querySelector('.predefined-image-size-height').value)
-                if ((width != newState.predefinedImageSize.width || height != newState.predefinedImageSize.height) && width > 0 && height > 0) {
+                if ((width != Vue.state.predefinedImageSize.width || height != Vue.state.predefinedImageSize.height) && width > 0 && height > 0) {
                   putValue(newState, ['predefinedImageSize', 'width'], width)
                   putValue(newState, ['predefinedImageSize', 'height'], height)
                 }
@@ -285,10 +286,11 @@ export default {
               }
               if (dom.querySelector('.style-frame-row-count') != undefined) {
                 const value = dom.querySelector('.style-frame-row-count').value
-                if (value != Vue.state.style.frameRowCount && isNaN(value) == false)
+                if (value != Vue.state.style.frameRowCount && isNaN(value) == false && `${value}`.length > 0)
                   putValue(newState, ['style', 'frameRowCount'], Math.max(1, value))
               }
-              Vue.$emit('state-tochange', newState)
+              if (Object.keys(newState).length > 0)
+                Vue.$emit('state-tochange', newState)
             }
           }
         ],

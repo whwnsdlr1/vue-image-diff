@@ -1,12 +1,12 @@
 <template>
 <div class="body" oncontextmenu="return false">
   <tool-bar
-    v-if="optToolBar.show"
+    v-show="optToolBar.show"
     ref="tool-bar"
     :options="optToolBar"
     :state="state"
     @state-tochange="listen__state__tochange"
-    @state-toreset="listen__state__toreset" />
+    @state-toreset="resetState" />
   <div class="view"
     ref="view"
     @touchstart="listen__view__on_x_down($event, 'touch')"
@@ -78,13 +78,13 @@ export default {
   data: function () {
     function assignOpt (refObj, newObj) {
       for (let key in newObj) {
-        if (refObj[key] != undefined) {
+        // if (refObj[key] != undefined) {
           if (typeof(refObj[key]) == 'object' && refObj[key].toString() == "[object Object]") {
             assignOpt(refObj[key], newObj[key])
           } else {
             refObj[key] = newObj[key]
           }
-        }
+        // }
       }
     }
     let state = {
@@ -93,7 +93,7 @@ export default {
         x: 0,
         y: 0
       },
-      zoom: 1,
+      zoom: undefined,
       voi: {
         windowCenter: 127,
         windowWidth: 256
@@ -118,12 +118,14 @@ export default {
         borderWidth: 1,
         borderColor: new Uint8ClampedArray([255, 0, 0]),
         showOverlayText: true,
-        frameRowCount: 3
+        frameRowCount: undefined
       }
     }
-
     assignOpt(state, this.options)
-    const initialState = JSON.parse(JSON.stringify(state))
+    let initialState = JSON.parse(JSON.stringify(state))
+    initialState.diff.colors.same = new Uint8ClampedArray(state.diff.colors.same)
+    initialState.diff.colors.diff = new Uint8ClampedArray(state.diff.colors.diff)
+    initialState.style.borderColor = new Uint8ClampedArray(state.style.borderColor)
     let optToolBar = {
       show: true,
       pan: {
@@ -167,6 +169,7 @@ export default {
     listen__data__onchange: async function (data) {
       const Vue = this
       Vue.layer.active = true
+      Vue.diffs = undefined
       Vue.doubleRaf(async () => {
         try {
           let framesData0 = []
@@ -228,17 +231,40 @@ export default {
               else if (data.length < 9) Vue.state.style.frameRowCount = 2
               else Vue.state.style.frameRowCount = 3
             }
-            const style = getComputedStyle(Vue.$refs['view'])
-            const thumbnailHeight = parseInt(style.height) / Vue.state.style.frameRowCount
-            const thumbnailWidth = parseInt(style.width) / Math.ceil(data.length / Vue.state.style.frameRowCount)
-            const scaleY = thumbnailHeight / defHeight
-            const scaleX = thumbnailWidth / defWidth
-            Vue.state.coord = {x: 0, y: 0}
-            Vue.state.zoom = (scaleY < scaleX)? scaleY : scaleX
+            if (Vue.state.zoom == undefined) {
+              const style = getComputedStyle(Vue.$refs['view'])
+              const thumbnailHeight = parseInt(style.height) / Vue.state.style.frameRowCount
+              const thumbnailWidth = parseInt(style.width) / Math.ceil(data.length / Vue.state.style.frameRowCount)
+              const scaleY = thumbnailHeight / defHeight
+              const scaleX = thumbnailWidth / defWidth
+              Vue.state.zoom = (scaleY < scaleX)? scaleY : scaleX
+              Vue.$emit('onstatechange', {zoom: Vue.state.zoom})
+            }
           }
 
           Vue.framesData = framesData
-          Vue.state.numFramesData = Vue.framesData
+          Vue.state.numFramesData = Vue.framesData.length
+          if (Vue.state.numFramesData > 0 && Vue.state.diff.activate == true) {
+            Vue.layer.message = `update diff...`
+            if (Vue.state.diff.reference.id != undefined) {
+              let referenceFrameDataIdx = framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)
+              if (referenceFrameDataIdx == -1)
+                Vue.state.diff.reference.id = undefined
+            }
+            if (Vue.state.diff.reference.id == undefined) {
+              Vue.state.diff.reference.id = framesData[0].id
+              Vue.$emit('onstatechange', {diff: {reference: {id: Vue.state.diff.reference.id}}})
+              let referenceFrameData = framesData[framesData.map(v => v.id).indexOf(framesData[0].id)]
+              referenceFrameData.diff.pixelCount = undefined
+              referenceFrameData.diff.psnr = undefined
+            }
+            await Vue.updateDiff()
+            for (let nf = 0; nf < framesData.length; nf++) {
+              let frameData = framesData[nf]
+              if (frameData.id == Vue.state.diff.reference.id) framesData[nf].diff.updated = 0
+              else framesData[nf].diff.updated += 1
+            }
+          }
           Vue.layer.active = false
         } catch (err) {
           console.log(err)
@@ -284,7 +310,8 @@ export default {
 
         const x = Vue.state.coord.x + (deltaX / Vue.state.zoom)
         const y = Vue.state.coord.y + (deltaY / Vue.state.zoom)
-        Vue.state.coord = {x, y}
+        // Vue.state.coord = {x, y}
+        Vue.listen__state__tochange({coord: {x, y}}, false)
       }
       function mouseRightMoveHandler (e) {
         const deltaX = e.pageX - lastX
@@ -294,7 +321,8 @@ export default {
 
         const windowWidth = Math.min(256, Math.max(1, Vue.state.voi.windowWidth + (deltaX / Vue.state.zoom)))
         const windowCenter = Math.min(255, Math.max(0, Vue.state.voi.windowCenter + (deltaY / Vue.state.zoom)))
-        Vue.state.voi = {windowWidth, windowCenter}
+        // Vue.state.voi = {windowWidth, windowCenter}
+        Vue.listen__state__tochange({voi: {windowWidth, windowCenter}}, false)
       }
       function touchMoveHandler (e) {
         const idx = Array.prototype.findIndex.call(e.changedTouches, v => v.identifier == Vue.internalState.moveTouch.identifier)
@@ -309,7 +337,8 @@ export default {
         if (Vue.internalState.zoomTouch == undefined) {
           const x = Vue.state.coord.x + (deltaX / Vue.state.zoom)
           const y = Vue.state.coord.y + (deltaY / Vue.state.zoom)
-          Vue.state.coord = {x, y}
+          // Vue.state.coord = {x, y}
+          Vue.listen__state__tochange({coord: {x, y}}, false)
         }
       }
       function touchMoveHandler2 (e) {
@@ -325,7 +354,10 @@ export default {
         const as = cdist - dist
         dist = cdist
         const scale = Vue.state.zoom + as
-        if (scale > 0) Vue.state.zoom = scale
+        if (scale > 0) {
+          // Vue.state.zoom = scale
+          Vue.listen__state__tochange({zoom: scale}, false)
+        }
       }
       function mouseLeftDownHandler () {
         Vue.$el.addEventListener('mousemove', mouseLeftMoveHandler)
@@ -374,10 +406,12 @@ export default {
       if (Vue.state.numFramesData == 0)
         return
       if (Vue.state.zoom == undefined) return
-
-      const as = e.wheelDelta < 0 || e.detail > 0 ? -0.10 : 0.10
+      const as = e.wheelDelta < 0 || e.detail > 0 || e.deltaY >= 0 ? -0.10 : 0.10
       const scale = Vue.state.zoom + as
-      if (scale > 0) Vue.state.zoom = scale
+      if (scale > 0) {
+        // Vue.state.zoom = scale
+        Vue.listen__state__tochange({zoom: scale}, false)
+      }
       return false
     },
     listen__frame__ondblclick: function (frameData) {
@@ -387,87 +421,48 @@ export default {
         }
       }
     },
-    listen__state__tochange: function (data) {
-      const Vue = this
-      Vue.layer.message = 'update state...'
-      Vue.layer.active = true
-      Vue.doubleRaf(async () => {
+    listen__state__tochange: function (data, use_layer = true) {
+      async function change () {
         if (data.coord != undefined) {
-          Vue.state.coord = data.coord
+          Vue.state.coord = {x: data.coord.x, y: data.coord.y}
         }
         if (data.zoom != undefined) {
           Vue.state.zoom = data.zoom
         }
         if (data.voi != undefined) {
-          Vue.state.voi = data.voi
+          Vue.state.voi = {windowCenter: data.voi.windowCenter, windowWidth: data.voi.windowWidth}
+        }
+        if (data.predefinedImageSize != undefined) {
+          if (data.predefinedImageSize.width != undefined && data.predefinedImageSize.height != undefined) {
+            Vue.state.predefinedImageSize = {width: data.predefinedImageSize.width, height: data.predefinedImageSize.height}
+          }
         }
         if (data.diff != undefined) {
           if (data.diff.activate != undefined) {
             Vue.state.diff.activate = data.diff.activate
           }
 
+          let framesData = Vue.framesData
           if (Vue.state.diff.activate == true) {
+            let isChangeDiffOpacity = false
             if (data.diff.opacity != undefined) {
               Vue.state.diff.opacity = data.diff.opacity
+              isChangeDiffOpacity = true
             }
             let isChangeDiffColors = false
             if (data.diff.colors != undefined) {
               if (data.diff.colors.same != undefined) {
-                Vue.state.diff.colors.same = data.diff.colors.same
+                Vue.state.diff.colors.same = new Uint8ClampedArray(data.diff.colors.same)
                 isChangeDiffColors = true
               }
               if (data.diff.colors.diff != undefined) {
-                Vue.state.diff.colors.diff = data.diff.colors.diff
+                Vue.state.diff.colors.diff = new Uint8ClampedArray(data.diff.colors.diff)
                 isChangeDiffColors = true
               }
             }
             Vue.layer.message = 'check pre-cacluated diff'
             await Vue.nextTick()
-            let framesData = Vue.framesData
-            for (let i = 0; i < framesData.length; i++) {
-              let frameData = framesData[i]
-              if (frameData == undefined) continue
-              if (frameData.diff.cornerstoneImage == undefined) {
-                Vue.layer.message = `create ${frameData.name}'s layer image.`
-                await Vue.nextTick()
-                frameData.diff.cornerstoneImage = await Vue.$cornerstone.createCornerstoneImageRgba(
-                  undefined,
-                  new Uint8Array(frameData.cornerstoneImage.width * frameData.cornerstoneImage.height * 4).fill(255),
-                  frameData.cornerstoneImage.width,
-                  frameData.cornerstoneImage.height
-                )
-              }
-              if (data.diff.opacity != undefined) {
-                frameData.diff.opacity = Vue.state.diff.opacity
-              }
-            }
-            if (Vue.diffs == undefined) {
-              let diffs = {}
-              let psnrs = {}
-              for (let i1 = 0; i1 < framesData.length - 1; i1++) {
-                const frameData1 = framesData[i1]
-                const pixelData1 = frameData1.cornerstoneImage.getPixelData()
-                Vue.layer.message = `caculate diff between ${frameData1.name} and other images.`
-                await Vue.nextTick()
-                for (let i2 = i1 + 1; i2 < framesData.length; i2++) {
-                  const frameData2 = framesData[i2]
-                  const pixelData2 = frameData2.cornerstoneImage.getPixelData()
-                  let diff = new Int16Array(frameData2.cornerstoneImage.width * frameData2.cornerstoneImage.height)
-                  
-                  for (let ip = 0; ip < diff.length; ip++) {
-                    const p1 = ip * 4
-                    const p2 = p1 + 1
-                    const p3 = p1 + 2
-                    diff[ip] = ((pixelData1[p1] - pixelData2[p1]) ** 2 + (pixelData1[p2] - pixelData2[p2]) ** 2 + (pixelData1[p3] - pixelData2[p3]) ** 2) ** 0.5
-                  }
-                  diffs[`${frameData1.id}x${frameData2.id}`] = diff
-                  psnrs[`${frameData1.id}x${frameData2.id}`] = ImageSimilarity.calcPsnrRgba(pixelData1, pixelData2)
-                }
-              }
-              Vue.diffs = diffs
-              Vue.psnrs = psnrs
-            }
-
+            
             let isChangeTolerance = false
             if (data.diff.tolerance != undefined) {
               Vue.state.diff.tolerance = data.diff.tolerance
@@ -476,64 +471,35 @@ export default {
             let isChangeReference = false
             if (data.diff.reference != undefined) {
               if (data.diff.reference.id != undefined) {
-                Vue.state.diff.reference.id = data.diff.reference.id
-                let referenceFrameData = Vue.framesData[Vue.framesData.map(v => v.id).indexOf(data.diff.reference.id)]
-                isChangeReference = true
-                referenceFrameData.diff.pixelCount = undefined
-                referenceFrameData.diff.psnr = undefined
+                let referenceFrameDataIdx = framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)
+                if (referenceFrameDataIdx != -1) {
+                  Vue.state.diff.reference.id = data.diff.reference.id
+                  let referenceFrameData = framesData[referenceFrameDataIdx]
+                  isChangeReference = true
+                  referenceFrameData.diff.pixelCount = undefined
+                  referenceFrameData.diff.psnr = undefined
+                }
               }
             }
-            if (Vue.state.diff.reference.id == undefined) {
-              Vue.state.diff.reference.id = Vue.framesData[0].id
-              let referenceFrameData = Vue.framesData[Vue.framesData.map(v => v.id).indexOf(Vue.framesData[0].id)]
+            if (Vue.state.numFramesData > 0 && Vue.state.diff.reference.id == undefined) {
+              Vue.state.diff.reference.id = framesData[0].id
+              let referenceFrameData = framesData[framesData.map(v => v.id).indexOf(framesData[0].id)]
               isChangeReference = true
               referenceFrameData.diff.pixelCount = undefined
               referenceFrameData.diff.psnr = undefined
             }
-            if (isChangeDiffColors || isChangeTolerance || isChangeReference) {
-              const tolerance = Vue.state.diff.tolerance
-              const frameId1 = Vue.framesData[Vue.framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)].id
-              for (let i2 = 0; i2 < Vue.framesData.length; i2++) {
-                let frameData2 = Vue.framesData[i2]
-                if (frameId1 == frameData2.id) continue
-
-                let diffArray = Vue.diffs[`${frameId1}x${frameData2.id}`]
-                if (diffArray == undefined) diffArray = Vue.diffs[`${frameData2.id}x${frameId1}`]
-                let pixelData2 = frameData2.diff.cornerstoneImage.getPixelData()
-                let diffPixelCount = 0
-                const colorDiff = Vue.state.diff.colors.diff
-                const colorSame = Vue.state.diff.colors.same
-                for (let np = 0; np < diffArray.length; np ++) {
-                  const isDiff = diffArray[np] >= tolerance
-                  const p1 = 4 * np
-                  const p2 = p1 + 1
-                  const p3 = p2 + 1
-                  if (isDiff == false) {
-                    pixelData2[p1] = colorSame[0]
-                    pixelData2[p2] = colorSame[1]
-                    pixelData2[p3] = colorSame[2]
-                  } else {
-                    pixelData2[p1] = colorDiff[0]
-                    pixelData2[p2] = colorDiff[1]
-                    pixelData2[p3] = colorDiff[2]
-                    diffPixelCount++
-                  }
-                }
-                Vue.framesData[i2].diff.pixelCount = diffPixelCount
-                let psnr = Vue.psnrs[`${frameId1}x${frameData2.id}`]
-                if (psnr == undefined) psnr = Vue.psnrs[`${frameData2.id}x${frameId1}`]
-                Vue.framesData[i2].diff.psnr = psnr
-              }  
+            if (Vue.state.numFramesData > 0 && (isChangeDiffOpacity || isChangeDiffColors || isChangeTolerance || isChangeReference)) {
+              await Vue.updateDiff()
             }
 
-            for (let nf = 0; nf < Vue.framesData.length; nf++) {
-              let frameData = Vue.framesData[nf]
-              if (frameData.id == Vue.state.diff.reference.id) Vue.framesData[nf].diff.updated = 0
-              else Vue.framesData[nf].diff.updated += 1
+            for (let nf = 0; nf < framesData.length; nf++) {
+              let frameData = framesData[nf]
+              if (frameData.id == Vue.state.diff.reference.id) framesData[nf].diff.updated = 0
+              else framesData[nf].diff.updated += 1
             }
           } else {
-            for (let nf = 0; nf < Vue.framesData.length; nf++) {
-              Vue.framesData[nf].diff.updated = 0
+            for (let nf = 0; nf < framesData.length; nf++) {
+              framesData[nf].diff.updated = 0
             }
           }
         }
@@ -541,17 +507,33 @@ export default {
           if (data.style.borderWidth != undefined)
             Vue.state.style.borderWidth = data.style.borderWidth
           if (data.style.borderColor != undefined)
-            Vue.state.style.borderColor = data.style.borderColor
+            Vue.state.style.borderColor = new Uint8ClampedArray(data.style.borderColor)
           if (data.style.showOverlayText != undefined)
             Vue.state.style.showOverlayText = data.style.showOverlayText
           if (data.style.frameRowCount != undefined)
             Vue.state.style.frameRowCount = data.style.frameRowCount
         }
         Vue.layer.active = false
-      })
+      }
+      const Vue = this
+      if (use_layer == true) {
+        Vue.layer.message = 'update state...'
+        Vue.layer.active = true
+        Vue.doubleRaf(change)
+      } else
+        change()
+      Vue.$emit('onstatechange', data)
     },
-    listen__state__toreset: function () {
-      this.listen__state__tochange(this.initialState)
+    getState: function () {
+      return JSON.parse(JSON.stringify(this.state))
+    },
+    setState: function (data, use_layer) {
+      this.listen__state__tochange(data, use_layer)
+    },
+    resetState: function () {
+      const Vue = this
+      if (Vue.state.numFramesData > 0)
+        Vue.listen__state__tochange(this.initialState)
     },
     copyTouch: function (touch) {
       return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
@@ -594,12 +576,6 @@ export default {
       await this.$nextTick()
       await sleep(ms)
     },
-    getState: function () {
-      // return this.state
-      return JSON.parse(JSON.stringify(this.state))
-    },
-    setState: function () {
-    },
     openControlPanel: function () {
       const Vue = this
       const toolBar = Vue.$refs['tool-bar']
@@ -607,6 +583,82 @@ export default {
         return
       
       toolBar.listen__cp__onclick()
+    },
+    updateDiff: async function () {
+      const Vue = this
+      let framesData = Vue.framesData
+      for (let i = 0; i < framesData.length; i++) {
+        let frameData = framesData[i]
+        if (frameData == undefined) continue
+        if (frameData.diff.cornerstoneImage == undefined) {
+          frameData.diff.cornerstoneImage = await Vue.$cornerstone.createCornerstoneImageRgba(
+            undefined,
+            new Uint8Array(frameData.cornerstoneImage.width * frameData.cornerstoneImage.height * 4).fill(255),
+            frameData.cornerstoneImage.width,
+            frameData.cornerstoneImage.height
+          )
+        }
+        frameData.diff.opacity = Vue.state.diff.opacity
+      }
+      if (Vue.diffs == undefined) {
+        let diffs = {}
+        let psnrs = {}
+        for (let i1 = 0; i1 < framesData.length - 1; i1++) {
+          const frameData1 = framesData[i1]
+          if (frameData1 == undefined) continue
+          const pixelData1 = frameData1.cornerstoneImage.getPixelData()
+          for (let i2 = i1 + 1; i2 < framesData.length; i2++) {
+            const frameData2 = framesData[i2]
+            if (frameData2 == undefined) continue
+            const pixelData2 = frameData2.cornerstoneImage.getPixelData()
+            let diff = new Int16Array(frameData2.cornerstoneImage.width * frameData2.cornerstoneImage.height)
+            
+            for (let ip = 0; ip < diff.length; ip++) {
+              const p1 = ip * 4
+              const p2 = p1 + 1
+              const p3 = p1 + 2
+              diff[ip] = ((pixelData1[p1] - pixelData2[p1]) ** 2 + (pixelData1[p2] - pixelData2[p2]) ** 2 + (pixelData1[p3] - pixelData2[p3]) ** 2) ** 0.5
+            }
+            diffs[`${frameData1.id}x${frameData2.id}`] = diff
+            psnrs[`${frameData1.id}x${frameData2.id}`] = ImageSimilarity.calcPsnrRgba(pixelData1, pixelData2)
+          }
+        }
+        Vue.diffs = diffs
+        Vue.psnrs = psnrs
+      }
+      const tolerance = Vue.state.diff.tolerance
+      const frameId1 = framesData[framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)].id
+      for (let i2 = 0; i2 < framesData.length; i2++) {
+        let frameData2 = framesData[i2]
+        if (frameId1 == frameData2.id) continue
+
+        let diffArray = Vue.diffs[`${frameId1}x${frameData2.id}`]
+        if (diffArray == undefined) diffArray = Vue.diffs[`${frameData2.id}x${frameId1}`]
+        let pixelData2 = frameData2.diff.cornerstoneImage.getPixelData()
+        let diffPixelCount = 0
+        const colorDiff = Vue.state.diff.colors.diff
+        const colorSame = Vue.state.diff.colors.same
+        for (let np = 0; np < diffArray.length; np ++) {
+          const isDiff = diffArray[np] >= tolerance
+          const p1 = 4 * np
+          const p2 = p1 + 1
+          const p3 = p2 + 1
+          if (isDiff == false) {
+            pixelData2[p1] = colorSame[0]
+            pixelData2[p2] = colorSame[1]
+            pixelData2[p3] = colorSame[2]
+          } else {
+            pixelData2[p1] = colorDiff[0]
+            pixelData2[p2] = colorDiff[1]
+            pixelData2[p3] = colorDiff[2]
+            diffPixelCount++
+          }
+        }
+        Vue.framesData[i2].diff.pixelCount = diffPixelCount
+        let psnr = Vue.psnrs[`${frameId1}x${frameData2.id}`]
+        if (psnr == undefined) psnr = Vue.psnrs[`${frameData2.id}x${frameId1}`]
+        Vue.framesData[i2].diff.psnr = psnr
+      }
     }
   },
   computed: {
@@ -623,7 +675,8 @@ export default {
   },
   updated () {
   },
-  async mounted () {
+  mounted () {
+    /*
     function fetchImages (data) {
       return new Promise(function(resolve) {
         for (let i = 0; i < data.length; i++) {
@@ -660,6 +713,8 @@ export default {
         ext: 'jpg'
       }
     ]).then(data => this.listen__data__onchange(data))
+    */
+    // this.listen__data__onchange(this.data)
   }
 }
 </script>

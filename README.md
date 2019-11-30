@@ -1,6 +1,6 @@
 # vue-image-diff
 
-![](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/example.gif?raw=true)
+![](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/example.png?raw=true)
 <br />
 vue component for multiple image comparison.
 <br />
@@ -121,13 +121,19 @@ optToolBar = {
 ```
 ### functions
 ![](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/control_panel.png?raw=true)
-- open Control panel: openControlPanel()
+- openControlPanel(): open Control panel.
+- resetState(): reset to initial state.
+- setState(): set new state.
+- getState(): get current state.
 
+### event
+- onstatechange: vue-event raised when state change with state object. you can catch using <vue-image-diff ... @onstatechange="listener" ... />
 
 ### Control
-- mouse & touch drag - panning
+- left mouse & touch drag - panning
 - mouse wheel & pinch to zoom - zoom in / out
 - mouse doubleclick - change reference image for diff
+- right mouse drag - adjust brightness and contrast
 
 ## Browser support - (tested)
 - Google Chrome 77+
@@ -162,3 +168,7 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 - eslint
 - eslint-plugin-vue
 - vue-template-compiler
+
+## TO DO
+- support tiff, bmp and 16bit png format.
+- reduce library size.
