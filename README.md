@@ -4,16 +4,24 @@
 <br />
 vue component for multiple image comparison.
 <br />
+multiple images can be panned and scaled simultaneously and compared by pixel-wise.
+<br />
 currently supported only 8bit jpg and png format.
 
+## Examples
 Web-App: [https://github.com/whwnsdlr1/image-diff](https://github.com/whwnsdlr1/image-diff)
 <br />
-jsfiddle1: [https://jsfiddle.net/whwnsdlr1/xgz21e95/](https://jsfiddle.net/whwnsdlr1/xgz21e95/)
+jsfiddle1 - using web image url: [https://jsfiddle.net/whwnsdlr1/xgz21e95/](https://jsfiddle.net/whwnsdlr1/xgz21e95/)
 <br />
-jsfiddle2: [https://jsfiddle.net/whwnsdlr1/84bkq2hy/](https://jsfiddle.net/whwnsdlr1/84bkq2hy/)
+jsfiddle2 - diff blur images: [https://jsfiddle.net/whwnsdlr1/84bkq2hy/](https://jsfiddle.net/whwnsdlr1/84bkq2hy/)
+<br />
+jsfiddle3 - using input event: [https://jsfiddle.net/whwnsdlr1/38zhbtm1/](https://jsfiddle.net/whwnsdlr1/38zhbtm1/)
 <br />
 
 ## Usage
+### install
+npm i vue-image-diff
+
 ### how to include component
 in Vue Project
 ```html
@@ -23,11 +31,11 @@ in Vue Project
 ...
 </template>
 <script>
-import VueImageDiff from 'vue-image-diff'
+import vueImageDiff from 'vue-image-diff'
 export default {
   ...
   components: {
-    'vue-image-diff': VueImageDiff
+    'vue-image-diff': vueImageDiff
   }
   ...
 }
@@ -40,13 +48,30 @@ in html
 <script src="vue.js"></script><!-- include vue.js first! -->
 <script src="VueImageDiff.js"></script>
 ...
-<vue-image-diff :data=data :options=options :options-tool-bar=optionsToolBar />
+<div class="container">
+  <vue-image-diff :data=data :options=options :options-tool-bar=optionsToolBar />
+</div>
 ...
+<script>
+new Vue({
+  el: '.container',
+  components: {
+    'vue-image-diff': vueImageDiff
+  },
+  data: {
+    return {
+      data: [],
+      options: {}
+    }
+  }
+})
+</script>
 </body>
 ```
 
-### arguments structure
-data is array of object.
+### props
+#### data
+An array of objects that hold image information.
 ```js
 data = [
   {
@@ -59,7 +84,8 @@ data = [
 ]
 ```
 
-options is object
+#### options
+An object that gives information about the initial state of the component.
 ```js
 options = {
   coord: {
@@ -80,7 +106,7 @@ options = {
     reference: {
       id: undefined, // String or undefined, (optional): default value is undefined. base image to diff. if not set, it is selected as the first image.
     },
-    tolerance: 1, // Number, (optional): default value is 1. range [1, 441]. if difference value(Mean Square Error) is greater than or equal tolerance, pixel is set difference-tag. opposite, set same-tag less than tolerance. ![equation](http://latex.codecogs.com/png.latex?%5Csum_%7BP%7D%5E%7Bp%7D%28%5Csqrt%7B%28R_%7Bp1%7D-R_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28G_%7Bp1%7D-G_%7Bp2%7D%29%5E%7B2%7D%20&plus;%20%28B_%7Bp1%7D-B_%7Bp2%7D%29%5E%7B2%7D%7D%29)
+    tolerance: 1, // Number, (optional): default value is 1. range [1, 441]. if difference value(Mean Square Error) is greater than or equal tolerance, pixel is set difference-tag. opposite, set same-tag less than tolerance.
     opacity: 0.7, // Number, (optional): default value is 0.7. range (0, 1). opacity of diff overlay
     colors: {
       same: new Uint8ClampedArray([0, 0, 255]), // Array, (optional): default value is [0, 0, 255]. color rgb of same-tag pixel
@@ -95,8 +121,10 @@ options = {
   }
 }
 ```
+tolerance: ![tolerance](http://latex.codecogs.com/png.latex?%5Csqrt%7B%28R_%7Bp1%7D-R_%7Bp2%7D%29%5E%7B2%7D&plus;%28G_%7Bp1%7D-G_%7Bp2%7D%29%5E%7B2%7D&plus;%28B_%7Bp1%7D-B_%7Bp2%7D%29%5E%7B2%7D%7D)
 
-optionsToolBar is object
+#### optionsToolBar
+An object that gives information about the initial state of the component toolbar.
 ```js
 optToolBar = {
   show: true, // Bool, (optional)
@@ -119,15 +147,18 @@ optToolBar = {
   }
 }
 ```
-### functions
+### API
 ![](https://github.com/whwnsdlr1/vue-image-diff/blob/master/example/control_panel.png?raw=true)
-- openControlPanel(): open Control panel.
-- resetState(): reset to initial state.
-- setState(): set new state.
-- getState(): get current state.
+- openControlPanel: open Control panel.
+- resetState: reset to initial state.
+- setState: set new state.
+- getState: get current state.
 
 ### event
-- onstatechange: vue-event raised when state change with state object. you can catch using <vue-image-diff ... @onstatechange="listener" ... />
+- onstatechange: vue-event raised when state change with state object. you can catch like this
+```html
+<vue-image-diff ... @onstatechange="listener" ... />
+```
 
 ### Control
 - left mouse & touch drag - panning
@@ -139,17 +170,6 @@ optToolBar = {
 - Google Chrome 77+
 - Google Chrome 77+ on Android 9+
 - Mozilla FireFox 68+
-
-## Project setup
-### Build
-build project as below
-```
-git clone https://github.com/whwnsdlr1/vue-image-diff
-cd vue-image-diff
-yarn run build
-```
-### Customize configuration
-See [Configuration Reference](https://cli.vuejs.org/config/).
 
 ## Third-party libraries
 ### Dependencies
@@ -172,3 +192,4 @@ See [Configuration Reference](https://cli.vuejs.org/config/).
 ## TO DO
 - support tiff, bmp and 16bit png format.
 - reduce library size.
+- add SSIM

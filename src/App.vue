@@ -18,6 +18,7 @@
         <frame
           :class="`frame-${row}-${col}`"
           :frame-data="frameData"
+          :key="frameData._uid"
           :state="state"
           :style="{ borderTop: getFrameBorder(row, col, true), borderLeft: getFrameBorder(row, col, false) }" />
       </div>
@@ -222,7 +223,9 @@ export default {
                 },
                 name: datum.name,
                 params: datum.params,
-                resized
+                resized,
+                _uid: MISC.getUuid4(),
+                _empty: false
               })
             }
       
@@ -415,7 +418,7 @@ export default {
       return false
     },
     listen__frame__ondblclick: function (frameData) {
-      if (frameData != undefined && this.state.diff.activate == true) {
+      if (frameData._empty == false && this.state.diff.activate == true) {
         if (frameData.id != this.state.diff.reference.id) {
           this.listen__state__tochange({diff: {reference: {id: frameData.id}}})
         }
@@ -552,7 +555,7 @@ export default {
           idx++
         }
         for (; idx < cols * frameRowCount; idx++) {
-          const datum = undefined
+          const datum = {_uid: MISC.getUuid4(), _empty: true}
           if (idx % cols == 0) framesData.push([])
           let _frames = framesData[framesData.length - 1]
           _frames.push(datum)
@@ -589,7 +592,7 @@ export default {
       let framesData = Vue.framesData
       for (let i = 0; i < framesData.length; i++) {
         let frameData = framesData[i]
-        if (frameData == undefined) continue
+        if (frameData._empty == true) continue
         if (frameData.diff.cornerstoneImage == undefined) {
           frameData.diff.cornerstoneImage = await Vue.$cornerstone.createCornerstoneImageRgba(
             undefined,
@@ -693,7 +696,7 @@ export default {
         }
       })
     }
-    fetchImages([
+    let data = await fetchImages([
       {
         name: 'korea Mountains',
         params: {author: 'fxgsell', license: 'CC BY 2.0'},
@@ -712,9 +715,13 @@ export default {
         url: 'https://live.staticflickr.com/1683/24824937304_2d71742e34_c_d.jpg',
         ext: 'jpg'
       }
-    ]).then(data => this.listen__data__onchange(data))
+    ])
+    this.listen__data__onchange(data)
+    await sleep(1000)
+    this.listen__data__onchange([data[0]])
+    await sleep(1000)
+    this.listen__data__onchange([data[2], data[1]])
     */
-    // this.listen__data__onchange(this.data)
   }
 }
 </script>

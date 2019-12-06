@@ -1,7 +1,7 @@
 <template>
   <div class="body"
-    :class="{ 'no-frame-data': frameData == undefined }">
-    <div v-if="frameData != undefined && state.style.showOverlayText == true" class="overlay">
+    :class="{ 'no-frame-data': frameData._empty == true }">
+    <div v-if="frameData._empty == false && state.style.showOverlayText == true" class="overlay">
       <span class="name" :class="{ reference: state.diff.activate == true && state.diff.reference != undefined && (state.diff.reference.id == frameData.id) }">{{ frameData.name }}</span>
       <div v-for="(value, key, index) in frameData.params" :key="`params-${index}`"
         class="params"
@@ -10,7 +10,7 @@
       </div>
     </div>
     <transition name="fade">
-      <div v-if="frameData != undefined && (state.diff.activate == true)" class="overlay-bottom">
+      <div v-if="frameData._empty == false && (state.diff.activate == true)" class="overlay-bottom">
         <span v-for="(text, index) in overlayBottomTexts" :key="`overlay-bottom-text-${index}`"
           :class="text.class">
           {{ text.textContent }}
@@ -37,7 +37,7 @@ export default {
     listen__x__onresize: function () {
       const Vue = this
       Vue.$cornerstone.resize(Vue.$el, false)
-      if (Vue.frameData != undefined) {
+      if (Vue.frameData._empty == false) {
         let layers = this.$cornerstone.getLayers(this.$el)
         for (let i = 0; i < layers.length; i++) {
           let viewport = layers[i].viewport
@@ -93,7 +93,7 @@ export default {
   },
   watch: {
     "state.coord": function (coord) {
-      if (this.frameData != undefined && coord != undefined) {
+      if (this.frameData._empty == false && coord != undefined) {
         let layers = this.$cornerstone.getLayers(this.$el)
         for (let i = 0; i < layers.length; i++) {
           let viewport = layers[i].viewport
@@ -104,7 +104,7 @@ export default {
       }
     },
     'state.zoom': function (zoom) {
-      if (this.frameData != undefined && zoom != undefined) {
+      if (this.frameData._empty == false && zoom != undefined) {
         let layers = this.$cornerstone.getLayers(this.$el)
         for (let i = 0; i < layers.length; i++) {
           let viewport = layers[i].viewport
@@ -114,7 +114,7 @@ export default {
       }
     },
     'state.voi': function (voi) {
-      if (this.frameData != undefined) {
+      if (this.frameData._empty == false) {
         let layer = this.$cornerstone.getLayer(this.$el, this.imageLayerId)
         layer.viewport.voi.windowWidth = voi.windowWidth
         layer.viewport.voi.windowCenter = voi.windowCenter
@@ -122,17 +122,13 @@ export default {
       }
     },
     'frameData.diff.updated': function (updated) {
-      this.listen__diff__onupdate(updated)
-    },
-    'frameData.id': function () {
-      if (this.imageLayerId != undefined) {
-        this.$cornerstone.setLayerImage(this.$el, this.frameData.cornerstoneImage, this.imageLayerId)
-        this.$cornerstone.updateImage(this.$el)
+      if (this.frameData._empty == false) {
+        this.listen__diff__onupdate(updated)
       }
     }
   },
   mounted () {
-    if (this.frameData !== undefined) {
+    if (this.frameData._empty == false) {
       elementResizeEvent(this.$el, lodash.debounce(this.listen__x__onresize, 10))
       this.$cornerstone.enable(this.$el)
       const image = this.frameData.cornerstoneImage
@@ -141,6 +137,8 @@ export default {
       defViewport.scale = this.state.zoom
       defViewport.translation.y = this.state.coord.y
       defViewport.translation.x = this.state.coord.x
+      defViewport.voi.windowCenter = this.state.voi.windowCenter
+      defViewport.voi.windowWidth = this.state.voi.windowWidth
       const imageLayerId = this.$cornerstone.addLayer(this.$el, this.frameData.cornerstoneImage, {viewport: defViewport})
       this.imageLayerId = imageLayerId
       this.listen__diff__onupdate(this.frameData.diff.updated)
