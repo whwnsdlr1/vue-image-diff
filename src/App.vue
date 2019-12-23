@@ -539,6 +539,7 @@ export default {
       return JSON.parse(JSON.stringify(this.state))
     },
     setState: function (data, use_layer) {
+      const Vue = this
       if (Vue.state.numFramesData > 0)
         this.listen__state__tochange(data, use_layer)
     },
