@@ -171,17 +171,26 @@ export default {
       const Vue = this
       Vue.layer.active = true
       Vue.diffs = undefined
+
+      Vue.state.coord = {x: Vue.initialState.coord.x, y: Vue.initialState.coord.y}
+      Vue.state.zoom = Vue.initialState.zoom
       Vue.doubleRaf(async () => {
         try {
           let framesData0 = []
           let framesData = []
           if (data.length > 0) {
+            let ids = []
             for (const datum of data) {
               Vue.layer.message = `parse ${datum.name}`
               const res = await PARSE.parseImage(datum.blob, datum.ext)
-              
+              if (datum.id == undefined)
+                ids.push(MISC.getUuid4())
+              else {
+                if (ids.indexOf(datum.id) == -1) ids.push(datum.id)
+                else ids.push(MISC.getUuid4())
+              }
               framesData0.push({
-                id: datum.id != undefined ? datum.id : MISC.getUuid4(),
+                id: ids[ids.length - 1],
                 image: res,
                 name: datum.name,
                 params: datum.params != undefined ? datum.params : {},
@@ -237,7 +246,7 @@ export default {
             if (Vue.state.zoom == undefined) {
               const style = getComputedStyle(Vue.$refs['view'])
               const thumbnailHeight = parseInt(style.height) / Vue.state.style.frameRowCount
-              const thumbnailWidth = parseInt(style.width) / Math.ceil(data.length / Vue.state.style.frameRowCount)
+              const thumbnailWidth = parseInt(style.width) / Math.ceil(framesData.length / Vue.state.style.frameRowCount)
               const scaleY = thumbnailHeight / defHeight
               const scaleX = thumbnailWidth / defWidth
               Vue.state.zoom = (scaleY < scaleX)? scaleY : scaleX
@@ -419,9 +428,8 @@ export default {
     },
     listen__frame__ondblclick: function (frameData) {
       if (frameData._empty == false && this.state.diff.activate == true) {
-        if (frameData.id != this.state.diff.reference.id) {
+        if (frameData.id != this.state.diff.reference.id)
           this.listen__state__tochange({diff: {reference: {id: frameData.id}}})
-        }
       }
     },
     listen__state__tochange: function (data, use_layer = true) {
@@ -474,7 +482,7 @@ export default {
             let isChangeReference = false
             if (data.diff.reference != undefined) {
               if (data.diff.reference.id != undefined) {
-                let referenceFrameDataIdx = framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)
+                let referenceFrameDataIdx = framesData.map(v => v.id).indexOf(data.diff.reference.id)
                 if (referenceFrameDataIdx != -1) {
                   Vue.state.diff.reference.id = data.diff.reference.id
                   let referenceFrameData = framesData[referenceFrameDataIdx]
@@ -531,12 +539,34 @@ export default {
       return JSON.parse(JSON.stringify(this.state))
     },
     setState: function (data, use_layer) {
-      this.listen__state__tochange(data, use_layer)
+      if (Vue.state.numFramesData > 0)
+        this.listen__state__tochange(data, use_layer)
     },
     resetState: function () {
       const Vue = this
-      if (Vue.state.numFramesData > 0)
-        Vue.listen__state__tochange(this.initialState)
+      if (Vue.state.numFramesData > 0) {
+        if (this.initialState.zoom != undefined)
+          Vue.listen__state__tochange(this.initialState)
+        else {
+          if (Vue.state.numFramesData > 0) {
+            let defWidth
+            let defHeight
+            if (Vue.state.predefinedImageSize.width != undefined && Vue.state.predefinedImageSize.height != undefined) {
+              defWidth = Vue.state.predefinedImageSize.width
+              defHeight = Vue.state.predefinedImageSize.height
+            } else {
+              defWidth = Vue.framesData[0].cornerstoneImage.width
+              defHeight = Vue.framesData[0].cornerstoneImage.height
+            }
+            const style = getComputedStyle(Vue.$refs['view'])
+            const thumbnailHeight = parseInt(style.height) / Vue.state.style.frameRowCount
+            const thumbnailWidth = parseInt(style.width) / Math.ceil(Vue.state.numFramesData / Vue.state.style.frameRowCount)
+            const scaleY = thumbnailHeight / defHeight
+            const scaleX = thumbnailWidth / defWidth
+            Vue.listen__state__tochange({...this.initialState, zoom: (scaleY < scaleX)? scaleY : scaleX})
+          }
+        }
+      }
     },
     copyTouch: function (touch) {
       return { identifier: touch.identifier, pageX: touch.pageX, pageY: touch.pageY };
@@ -633,7 +663,8 @@ export default {
       const frameId1 = framesData[framesData.map(v => v.id).indexOf(Vue.state.diff.reference.id)].id
       for (let i2 = 0; i2 < framesData.length; i2++) {
         let frameData2 = framesData[i2]
-        if (frameId1 == frameData2.id) continue
+        if (frameId1 == frameData2.id)
+          continue
 
         let diffArray = Vue.diffs[`${frameId1}x${frameData2.id}`]
         if (diffArray == undefined) diffArray = Vue.diffs[`${frameData2.id}x${frameId1}`]
@@ -698,18 +729,21 @@ export default {
     }
     let data = await fetchImages([
       {
+        id: '0',
         name: 'korea Mountains',
         params: {author: 'fxgsell', license: 'CC BY 2.0'},
         url: 'https://live.staticflickr.com/5081/5223054798_c3fd926b63_c_d.jpg',
         ext: 'jpg'
       },
       {
+        id: '1',
         name: 'Mt. jiri Korea',
         params: {author: 'Byeong Min Park', license: 'flicker'},
         url: 'https://live.staticflickr.com/5577/15234883386_ffeeb3a263_c_d.jpg',
         ext: 'jpg'
       },
       {
+        id: '2',
         name: '_SSJ4363',
         params: {author: 'Seungjin Song', license: 'flicker'},
         url: 'https://live.staticflickr.com/1683/24824937304_2d71742e34_c_d.jpg',
@@ -717,10 +751,8 @@ export default {
       }
     ])
     this.listen__data__onchange(data)
-    await sleep(1000)
-    this.listen__data__onchange([data[0]])
-    await sleep(1000)
-    this.listen__data__onchange([data[2], data[1]])
+    await sleep(5000)
+    this.listen__data__onchange([data[0], data[0]])
     */
   }
 }

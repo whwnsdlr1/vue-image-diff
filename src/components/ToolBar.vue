@@ -25,8 +25,8 @@
       <span>ref:</span>
       <span class="diff-reference-val"
         :class="{inactive: !state.diff.activate}"
-        :title="`${state.diff.reference != undefined ? state.diff.reference.name : ''}`">
-        {{ state.diff.reference != undefined ? state.diff.reference.name : '' }}
+        :title="`${state.diff.reference != undefined ? state.diff.reference.id : ''}`">
+        {{ state.diff.reference != undefined ? state.diff.reference.id : '' }}
       </span>
     </div>
     <div v-show="options.diff.tolerance.show">

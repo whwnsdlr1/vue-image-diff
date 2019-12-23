@@ -89,35 +89,59 @@ An object that gives information about the initial state of the component.
 ```js
 options = {
   coord: {
-    x: 0, // Number, (optional): default value is 0. coordinate x
-    y: 0 // Number, (optional): default value is 0. coordinate y
+    x: 0,
+    // Number, (optional): default value is 0. coordinate x
+    y: 0
+    // Number, (optional): default value is 0. coordinate y
   },
-  zoom: 1, // Number, (optional): default value is calculate by windows. zoom, scale value. 1 is original scale
+  zoom: 1,
+  /* Number, (optional): default value is calculate by windows. zoom, scale value.
+    1 is original scale */
   voi: {
-    windowCenter: 127, // Number, (optional): default value is 127. range (0, 255]. adjust brightness
-    windowWidth: 256 // Number, (optional): default value is 256. range (1, 256]. adjust contrast
+    windowCenter: 127,
+    // Number, (optional): default value is 127. range (0, 255]. adjust brightness
+    windowWidth: 256
+    // Number, (optional): default value is 256. range (1, 256]. adjust contrast
   },
   predefinedImageSize: {
-    width: undefined, // Number or undefined, (optional): default value in undefined. width to be resized. if not set, other images are resized based on the first image size.
-    height: undefined // Number or undefined, (optional): default value in undefined. height to be resized. if not set, other images are resized based on the first image size.
+    width: undefined,
+    /* Number or undefined, (optional): default value in undefined. width to be resized.
+      if not set, other images are resized based on the first image size. */
+    height: undefined
+    /* Number or undefined, (optional): default value in undefined. height to be resized.
+     if not set, other images are resized based on the first image size. */
   },
   diff: {
-    activate: false, // Bool, (optional): default value is false. flag to show diff ovelary
+    activate: false,
+    // Bool, (optional): default value is false. flag to show diff ovelary
     reference: {
-      id: undefined, // String or undefined, (optional): default value is undefined. base image to diff. if not set, it is selected as the first image.
+      id: undefined,
+      /* String or undefined, (optional): default value is undefined. base image to diff.
+        if not set, it is selected as the first image. */
     },
-    tolerance: 1, // Number, (optional): default value is 1. range [1, 441]. if difference value(Mean Square Error) is greater than or equal tolerance, pixel is set difference-tag. opposite, set same-tag less than tolerance.
-    opacity: 0.7, // Number, (optional): default value is 0.7. range (0, 1). opacity of diff overlay
+    tolerance: 1,
+    /* Number, (optional): default value is 1. range [1, 441].
+      if difference value(Mean Square Error) is greater than or equal tolerance,
+      pixel is set difference-tag. opposite, set same-tag less than tolerance. */
+    opacity: 0.7,
+    // Number, (optional): default value is 0.7. range (0, 1). opacity of diff overlay
     colors: {
-      same: new Uint8ClampedArray([0, 0, 255]), // Array, (optional): default value is [0, 0, 255]. color rgb of same-tag pixel
-      diff: new Uint8ClampedArray([255, 0, 0]) // Array, (optional): default value is [0, 0, 255]. color rgb of diff-tag pixel
+      same: new Uint8ClampedArray([0, 0, 255]),
+      // Array, (optional): default value is [0, 0, 255]. color rgb of same-tag pixel
+      diff: new Uint8ClampedArray([255, 0, 0])
+      // Array, (optional): default value is [0, 0, 255]. color rgb of diff-tag pixel
     }
   },
   style: {
-    borderWidth: 1, // Number, (optional): default value is [1, infty). border width between frames.
-    borderColor: new Uint8ClampedArray([255, 0, 0]), // Array, (optional): default value is [255, 0, 0]. color rgb of border
-    showOverlayText: true, // Bool, (optional): default value is true. flag to show overlay text
-    frameRowCount: 3 // Number or undefined, (optional): default value is undefined. range [1, infty). frame row count. if not set, calcuate by data length.
+    borderWidth: 1,
+    // Number, (optional): default value is [1, infty). border width between frames.
+    borderColor: new Uint8ClampedArray([255, 0, 0]),
+    // Array, (optional): default value is [255, 0, 0]. color rgb of border
+    showOverlayText: true,
+    // Bool, (optional): default value is true. flag to show overlay text
+    frameRowCount: 3
+    /* Number or undefined, (optional): default value is undefined. range [1, infty).
+      frame row count. if not set, calcuate by data length. */
   }
 }
 ```

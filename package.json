@@ -1,6 +1,6 @@
 {
   "name": "vue-image-diff",
-  "version": "1.0.4",
+  "version": "1.0.5",
   "description": "vue component for multiple image diff",
   "keywords": [
     "image-diff",
@@ -42,7 +42,7 @@
   "devDependencies": {
     "@vue/cli-plugin-babel": "^3.11.0",
     "@vue/cli-plugin-eslint": "^3.11.0",
-    "@vue/cli-service": "^3.11.0",
+    "@vue/cli-service": "^4.1.1",
     "babel-eslint": "^10.0.1",
     "eslint": "^5.16.0",
     "eslint-plugin-vue": "^5.0.0",
