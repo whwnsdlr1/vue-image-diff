@@ -34,7 +34,7 @@
     "core-js": "^2.6.5",
     "cornerstone-core": "^2.3.0",
     "element-resize-event": "^3.0.3",
-    "jpeg-js": "^0.3.6",
+    "jpeg-js": "^0.4.0",
     "pngjs": "^3.4.0",
     "vue": "^2.6.10",
     "vue-lodash": "^2.0.2"
